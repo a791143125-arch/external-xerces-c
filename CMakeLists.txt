@@ -27,6 +27,10 @@ project(xerces-c VERSION 3.1.4 LANGUAGES C CXX)
 option(ENABLE_SHARED "Build shared library." YES)
 option(ENABLE_STATIC "Build static library." YES)
 
+if(NOT APPLE)
+	set(CMAKE_CXX_STANDARD 11)
+endif()
+
 
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
