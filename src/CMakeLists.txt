@@ -1127,8 +1127,6 @@ if(APPLE)
 	if(NOT IOS)
 		list(APPEND LINK_FLAGS "-framework CoreServices")
 	endif()
-else()
-	set_source_files_properties(${LIBXERCES_SOURCES} PROPERTIES COMPILE_FLAGS "-std=c++11")
 endif()
 string(REPLACE ";" " " LINK_FLAGS_STR "${LINK_FLAGS}")
 
