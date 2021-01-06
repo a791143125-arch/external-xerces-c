@@ -509,3 +509,5 @@
 /* Define to empty if the keyword `volatile' does not work. Warning: valid
    code using `volatile' can become incorrect without. Disable with care. */
 #cmakedefine volatile
+
+#cmakedefine XERCES_WINDOWS_UWP 1
