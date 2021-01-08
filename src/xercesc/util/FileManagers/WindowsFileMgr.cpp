@@ -289,7 +289,7 @@ WindowsFileMgr::fileSize(FileHandle f, MemoryManager* const manager)
     if (!f)
 		ThrowXMLwithMemMgr(XMLPlatformUtilsException, XMLExcepts::CPtr_PointerIsZero, manager);
 	
-    DWORD high=0;
+    DWORD high=0, low=0;
 #ifdef XERCES_WINDOWS_UWP	
 	FILE_STANDARD_INFO finfo = {0};
 	if(GetFileInformationByHandleEx (f, FileStandardInfo, &finfo, sizeof(finfo)) == 0)
@@ -297,7 +297,7 @@ WindowsFileMgr::fileSize(FileHandle f, MemoryManager* const manager)
 	else
 		high = finfo.EndOfFile.QuadPart;
 #else	   
-    DWORD low=::GetFileSize(f, &high);
+    low=::GetFileSize(f, &high);
 #endif	
     if(low==INVALID_FILE_SIZE && GetLastError()!=NO_ERROR)
         // TODO: find a better exception
