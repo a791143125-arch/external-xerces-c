@@ -18,7 +18,7 @@
 /*
  * $Id: WindowsFileMgr.cpp 556533 2007-07-16 07:36:41Z amassari $
  */
-
+#include <config.h>
 #include <windows.h>
 
 #include <xercesc/util/FileManagers/WindowsFileMgr.hpp>
@@ -41,10 +41,14 @@ static bool isBackSlash(XMLCh c) {
 WindowsFileMgr::WindowsFileMgr()
 {
     // Figure out if we are on NT and save that flag for later use
+#ifdef XERCES_WINDOWS_UWP
+	_onNT = true;
+#else	
     OSVERSIONINFO   OSVer;
     OSVer.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     ::GetVersionEx(&OSVer);
     _onNT = (OSVer.dwPlatformId == VER_PLATFORM_WIN32_NT);
+#endif	
 }
 
 
@@ -138,7 +142,24 @@ WindowsFileMgr::fileOpen(const XMLCh* fileName, bool toWrite, MemoryManager* con
         nameToOpen = tmpUName;
     }
     FileHandle retVal = 0;
-    if (_onNT)
+#ifdef XERCES_WINDOWS_UWP
+	_CREATEFILE2_EXTENDED_PARAMETERS parameters;
+	parameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+	parameters.dwFileAttributes=FILE_ATTRIBUTE_NORMAL;
+	parameters.dwFileFlags = (toWrite?0:FILE_FLAG_SEQUENTIAL_SCAN);
+	parameters.dwSecurityQosFlags=SECURITY_ANONYMOUS;
+	parameters.lpSecurityAttributes=0;
+	parameters.hTemplateFile=NULL;
+	
+	retVal = ::CreateFile2(
+		(LPCWSTR) nameToOpen
+		, toWrite?GENERIC_WRITE:GENERIC_READ
+		, FILE_SHARE_READ
+		, toWrite?CREATE_ALWAYS:OPEN_EXISTING
+		, &parameters
+	);
+#else
+	if (_onNT)
     {
         retVal = ::CreateFileW
             (
@@ -170,6 +191,7 @@ WindowsFileMgr::fileOpen(const XMLCh* fileName, bool toWrite, MemoryManager* con
             );
         manager->deallocate(tmpName);//delete [] tmpName;
     }
+#endif
 
     if (tmpUName)
         manager->deallocate(tmpUName);//delete [] tmpUName;
@@ -267,8 +289,16 @@ WindowsFileMgr::fileSize(FileHandle f, MemoryManager* const manager)
     if (!f)
 		ThrowXMLwithMemMgr(XMLPlatformUtilsException, XMLExcepts::CPtr_PointerIsZero, manager);
 	
-    DWORD high=0;
-    DWORD low=::GetFileSize(f, &high);
+    DWORD high=0, low=0;
+#ifdef XERCES_WINDOWS_UWP	
+	FILE_STANDARD_INFO finfo = {0};
+	if(GetFileInformationByHandleEx (f, FileStandardInfo, &finfo, sizeof(finfo)) == 0)
+		low = INVALID_FILE_SIZE;
+	else
+		high = finfo.EndOfFile.QuadPart;
+#else	   
+    low=::GetFileSize(f, &high);
+#endif	
     if(low==INVALID_FILE_SIZE && GetLastError()!=NO_ERROR)
         // TODO: find a better exception
 		ThrowXMLwithMemMgr(XMLPlatformUtilsException, XMLExcepts::File_CouldNotGetCurPos, manager);
@@ -365,20 +395,9 @@ WindowsFileMgr::getCurrentDirectory(MemoryManager* const manager)
     //  If we are on NT, then use wide character APIs, else use ASCII APIs.
     //  We have to do it manually since we are only built in ASCII mode from
     //  the standpoint of the APIs.
-    //
-    if (_onNT)
-    {
-        // Use a local buffer that is big enough for the largest legal path
-        const unsigned int bufSize = 1024;
-        XMLCh tmpPath[bufSize + 1];
-
-        if (!::GetCurrentDirectoryW(bufSize, (LPWSTR)tmpPath))
-            return 0;
-
-        // Return a copy of the path
-        return XMLString::replicate(tmpPath, manager);
-    }
-     else
+    //	
+#ifndef XERCES_WINDOWS_UWP	
+    if (!_onNT)
     {
         // Use a local buffer that is big enough for the largest legal path
         const unsigned int bufSize = 511;
@@ -389,6 +408,18 @@ WindowsFileMgr::getCurrentDirectory(MemoryManager* const manager)
 
         // Return a transcoded copy of the path
         return XMLString::transcode(tmpPath, manager);
+    }else
+#endif		
+    {
+        // Use a local buffer that is big enough for the largest legal path
+        const unsigned int bufSize = 1024;
+        XMLCh tmpPath[bufSize + 1];
+
+        if (!::GetCurrentDirectoryW(bufSize, (LPWSTR)tmpPath))
+            return 0;
+
+        // Return a copy of the path
+        return XMLString::replicate(tmpPath, manager);
     }
 }
 
