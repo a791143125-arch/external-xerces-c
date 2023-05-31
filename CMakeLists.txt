@@ -1,6 +1,6 @@
 ############################################################################
 # CMakeLists.txt
-# Copyright (C) 2017  Belledonne Communications, Grenoble France
+# Copyright (C) 2017-2023  Belledonne Communications, Grenoble France
 #
 ############################################################################
 #
@@ -23,9 +23,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(xerces-c VERSION 3.1.4 LANGUAGES C CXX)
 
-
-option(ENABLE_SHARED "Build shared library." YES)
-option(ENABLE_STATIC "Build static library." YES)
 
 if(NOT APPLE)
 	set(CMAKE_CXX_STANDARD 11)
@@ -173,9 +170,11 @@ configure_file(config.h.cmake config.h)
 configure_file(src/xercesc/util/Xerces_autoconf_config.hpp.cmake xercesc/util/Xerces_autoconf_config.hpp)
 add_definitions("-DHAVE_CONFIG_H")
 
-include_directories(
-	"${CMAKE_CURRENT_BINARY_DIR}"
-	"src"
-)
+include(GNUInstallDirs)
 
 add_subdirectory(src)
+
+install(EXPORT XercesCTargets
+	FILE "XercesCTargets.cmake"
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/cmake"
+)

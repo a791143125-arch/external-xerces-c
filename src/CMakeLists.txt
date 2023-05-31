@@ -1,6 +1,6 @@
 ############################################################################
 # CMakeLists.txt
-# Copyright (C) 2017  Belledonne Communications, Grenoble France
+# Copyright (C) 2017-2023  Belledonne Communications, Grenoble France
 #
 ############################################################################
 #
@@ -1141,18 +1141,17 @@ if(NOT HAVE_STRNICMP)
 endif()
 
 
-if(ENABLE_STATIC)
-	add_library(xerces-c-static STATIC ${LIBXERCES_SOURCES})
-	set_target_properties(xerces-c-static PROPERTIES OUTPUT_NAME xerces-c)
-	if(LINK_FLAGS_STR)
-		set_target_properties(xerces-c-static PROPERTIES LINK_FLAGS "${LINK_FLAGS_STR}")
-	endif()
+add_library(xerces-c ${LIBXERCES_SOURCES})
+if(LINK_FLAGS_STR)
+	set_target_properties(xerces-c PROPERTIES LINK_FLAGS "${LINK_FLAGS_STR}")
 endif()
-if(ENABLE_SHARED)
-	add_library(xerces-c SHARED ${LIBXERCES_SOURCES})
-	if(LINK_FLAGS_STR)
-		set_target_properties(xerces-c PROPERTIES LINK_FLAGS "${LINK_FLAGS_STR}")
-	endif()
+target_include_directories(xerces-c PUBLIC
+	$<INSTALL_INTERFACE:include>
+	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+)
+
+if(BUILD_SHARED_LIBS)
 	if(MSVC)
 		target_compile_definitions(xerces-c PRIVATE "-DDLL_EXPORT" "-DXERCES_BUILDING_LIBRARY")
 		if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -1164,20 +1163,12 @@ if(ENABLE_SHARED)
 	endif()
 endif()
 
-if(ENABLE_STATIC)
-	install(TARGETS xerces-c-static
-		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-	)
-endif()
-if(ENABLE_SHARED)
-	install(TARGETS xerces-c
-		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-	)
-endif()
+install(TARGETS xerces-c EXPORT XercesCTargets
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+)
 
 install(FILES ${DOM_HEADERS}
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/xercesc/dom
