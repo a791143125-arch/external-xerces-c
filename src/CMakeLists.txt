@@ -1144,6 +1144,17 @@ add_library(xerces-c ${LIBXERCES_SOURCES})
 if(APPLE_FRAMEWORKS)
 	target_link_libraries(xerces-c PRIVATE ${APPLE_FRAMEWORKS})
 endif()
+
+if(WIN32)
+    if( CMAKE_SYSTEM_NAME STREQUAL "WindowsStore" AND CMAKE_SYSTEM_VERSION STREQUAL "10.0" )# UWP
+    else()
+        target_link_libraries(xerces-c PUBLIC Advapi32)
+    endif()
+endif(WIN32)
+
+if(LINK_FLAGS_STR)
+	set_target_properties(xerces-c PROPERTIES LINK_FLAGS "${LINK_FLAGS_STR}")
+endif()
 target_include_directories(xerces-c PUBLIC
 	$<INSTALL_INTERFACE:include>
 	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
