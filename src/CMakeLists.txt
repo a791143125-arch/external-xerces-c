@@ -1121,14 +1121,13 @@ if(XERCES_USE_FILEMGR_WINDOWS)
 endif()
 
 
-set(LINK_FLAGS)
+set(APPLE_FRAMEWORKS)
 if(APPLE)
-	list(APPEND LINK_FLAGS "-framework CoreFoundation")
+	list(APPEND APPLE_FRAMEWORKS "-framework CoreFoundation")
 	if(NOT IOS)
-		list(APPEND LINK_FLAGS "-framework CoreServices")
+		list(APPEND APPLE_FRAMEWORKS "-framework CoreServices")
 	endif()
 endif()
-string(REPLACE ";" " " LINK_FLAGS_STR "${LINK_FLAGS}")
 
 
 if(NOT HAVE_STRICMP)
@@ -1142,8 +1141,8 @@ endif()
 
 
 add_library(xerces-c ${LIBXERCES_SOURCES})
-if(LINK_FLAGS_STR)
-	set_target_properties(xerces-c PROPERTIES LINK_FLAGS "${LINK_FLAGS_STR}")
+if(APPLE_FRAMEWORKS)
+	target_link_libraries(xerces-c PRIVATE ${APPLE_FRAMEWORKS})
 endif()
 target_include_directories(xerces-c PUBLIC
 	$<INSTALL_INTERFACE:include>
@@ -1154,12 +1153,11 @@ target_include_directories(xerces-c PUBLIC
 if(BUILD_SHARED_LIBS)
 	if(MSVC)
 		target_compile_definitions(xerces-c PRIVATE "-DDLL_EXPORT" "-DXERCES_BUILDING_LIBRARY")
-		if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-			install(FILES $<TARGET_PDB_FILE:xerces-c>
-				DESTINATION ${CMAKE_INSTALL_BINDIR}
-				PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-			)
-		endif()
+		install(FILES $<TARGET_PDB_FILE:xerces-c>
+			DESTINATION ${CMAKE_INSTALL_BINDIR}
+			PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+			CONFIGURATIONS Debug RelWithDebInfo
+		)
 	endif()
 endif()
 
