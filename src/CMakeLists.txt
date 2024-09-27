@@ -1003,7 +1003,6 @@ set(WINMMGR_SOURCES
 	xercesc/util/MutexManagers/WindowsMutexMgr.cpp
 )
 
-
 set(LIBXERCES_SOURCES
 	${UTIL_SOURCES}
 	${DOM_SOURCES}
@@ -1129,16 +1128,15 @@ if(APPLE)
 	endif()
 endif()
 
-
 if(NOT HAVE_STRICMP)
 	list(APPEND LIBXERCES_SOURCES "stricmp.c")
 	list(APPEND LIBXERCES_HEADERS "stricmp.h")
 endif()
+
 if(NOT HAVE_STRNICMP)
 	list(APPEND LIBXERCES_SOURCES "strnicmp.c")
 	list(APPEND LIBXERCES_HEADERS "strnicmp.h")
 endif()
-
 
 add_library(xerces-c ${LIBXERCES_SOURCES})
 if(APPLE_FRAMEWORKS)
@@ -1152,9 +1150,6 @@ if(WIN32)
     endif()
 endif(WIN32)
 
-if(LINK_FLAGS_STR)
-	set_target_properties(xerces-c PROPERTIES LINK_FLAGS "${LINK_FLAGS_STR}")
-endif()
 target_include_directories(xerces-c PUBLIC
 	$<INSTALL_INTERFACE:include>
 	$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
@@ -1163,13 +1158,15 @@ target_include_directories(xerces-c PUBLIC
 
 if(BUILD_SHARED_LIBS)
 	if(MSVC)
-		target_compile_definitions(xerces-c PRIVATE "-DDLL_EXPORT" "-DXERCES_BUILDING_LIBRARY")
+		target_compile_definitions(xerces-c PRIVATE "XERCES_EXPORTS" "XERCES_BUILDING_LIBRARY" "XERCES_BUILDING_DEPRECATED_LIBRARY")
 		install(FILES $<TARGET_PDB_FILE:xerces-c>
 			DESTINATION ${CMAKE_INSTALL_BINDIR}
 			PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 			CONFIGURATIONS Debug RelWithDebInfo
 		)
 	endif()
+else()
+	set_target_properties(xerces-c PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 install(TARGETS xerces-c EXPORT XercesCTargets

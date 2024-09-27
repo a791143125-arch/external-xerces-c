@@ -405,10 +405,10 @@
 #cmakedefine XERCES_PATH_DELIMITER_BACKSLASH
 
 /* Define as the platform's export attribute */
-#cmakedefine XERCES_PLATFORM_EXPORT
+#cmakedefine XERCES_PLATFORM_EXPORT @XERCES_PLATFORM_EXPORT@
 
 /* Define as the platform's import attribute */
-#cmakedefine XERCES_PLATFORM_IMPORT
+#cmakedefine XERCES_PLATFORM_IMPORT @XERCES_PLATFORM_IMPORT@
 
 /* An appropriate signed 16 bit integer type */
 #cmakedefine XERCES_S16BIT_INT @XERCES_S16BIT_INT@
