@@ -20,7 +20,7 @@
 #
 ############################################################################
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.22)
 project(xerces-c VERSION 3.1.4 LANGUAGES C CXX)
 
 
